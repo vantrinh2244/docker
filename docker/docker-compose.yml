@@ -1,0 +1,71 @@
+version: "3"
+
+services:
+  nginx:
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+    build:
+      context: ./images
+      dockerfile: nginx.Dockerfile
+    working_dir: /var/www/html
+    container_name: real_nginx
+    ports:
+      - "80:80"
+      - "9001:9001"
+    volumes:
+      - ../src:/var/www/html
+      - ./logs/nginx_log:/var/log/nginx
+      - ./config/nginx/project1.conf:/etc/nginx/conf.d/project1.conf
+      - ./config/nginx/project2.conf:/etc/nginx/conf.d/project2.conf
+    links:
+      - php
+      - mysql
+
+  php:
+    build:
+      context: ./images
+      dockerfile: php.Dockerfile
+    container_name: real_php
+    volumes:
+      - ../src:/var/www/html
+      - ./logs/php-fpm/php-fpm.log:/var/log/php-fpm.log
+      - ./config/php-fpm/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    command: /var/www/html/example-app/rr serve -c /var/www/html/example-app/.rr.yaml
+    ports:
+      - 8443:9001/tcp
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --spider -q "http://127.0.0.1:8082/health?plugin=http&plugin=rpc"']
+      interval: 2s
+      timeout: 2s
+
+  mysql:
+    build:
+      context: ./images
+      dockerfile: mysql.Dockerfile
+    container_name: real_mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+
+  phpmyadmin:
+    image: phpmyadmin
+    # restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+  
+  composer:
+    container_name: real_composer
+    image: composer:latest
+    command: ["composer", "install"]
+    depends_on:
+      - php
+    volumes:
+      - ../src:/app
+    # restart: always
+
