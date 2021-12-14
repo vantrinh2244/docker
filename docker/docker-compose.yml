@@ -12,7 +12,6 @@ services:
     container_name: real_nginx
     ports:
       - "80:80"
-      - "9001:9001"
     volumes:
       - ../src:/var/www/html
       - ./logs/nginx_log:/var/log/nginx
