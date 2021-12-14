@@ -30,13 +30,6 @@ services:
       - ../src:/var/www/html
       - ./logs/php-fpm/php-fpm.log:/var/log/php-fpm.log
       - ./config/php-fpm/custom.ini:/usr/local/etc/php/conf.d/custom.ini
-    command: /var/www/html/example-app/rr serve -c /var/www/html/example-app/.rr.yaml
-    ports:
-      - 8443:9001/tcp
-    healthcheck:
-      test: ['CMD-SHELL', 'wget --spider -q "http://127.0.0.1:8082/health?plugin=http&plugin=rpc"']
-      interval: 2s
-      timeout: 2s
 
   mysql:
     build:
